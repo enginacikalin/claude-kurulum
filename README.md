@@ -32,4 +32,4 @@ Seçmeli kurulum için bölümleri kapatabilirsiniz: `TRADING_SET=core bash kur.
 - **MCP bağlantıları:** scrapling (güvenlik kancasıyla), borsa (borsa-mcp, sabit sürüm `e3b45b2`)
 - **Skill'ler:** borsaci, claude-trading-skills, founder-skill, discernment-nudge, mcp-builder, doc-coauthoring, deep-research, sr-screener
 
-Kurulan her depo kurulmadan önce incelendi. Kancası, ağ bağlantısı veya telif riski olanlar ya kancasız kuruluyor ya da listeye alınmadı.
+Kurulan her depo kurulmadan önce incelendi. Skill depoları ve borsa-mcp, `kur.sh` başındaki SHA değerleriyle incelenmiş sürüme sabitlenmiştir; upstream'deki yeni bir değişiklik otomatik gelmez. Güncellemek için önce yeni sürümü inceleyin, sonra SHA'yı değiştirin. Kancası, ağ bağlantısı veya telif riski olanlar ya kancasız kuruluyor ya da listeye alınmadı.

@@ -19,7 +19,13 @@ set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
 TRADING=${TRADING:-1}; TRADING_SET=${TRADING_SET:-all}; FOUNDER=${FOUNDER:-1}
 EK_SKILLER=${EK_SKILLER:-1}; KURALLAR=${KURALLAR:-1}
-BORSA_COMMIT=e3b45b22dafa703135afa84a1dc92973603a56f1   # 2026-09-24, test edildi
+# İncelenmiş ve test edilmiş sürümler (güncellemek için SHA'yı değiştirin)
+BORSA_COMMIT=e3b45b22dafa703135afa84a1dc92973603a56f1     # saidsurucu/borsa-mcp        2026-09-24
+BORSACI_SHA=292956ea4cf742e01240425a5c85e6c1e24b1259      # saidsurucu/borsaci          2026-07-13
+TRADING_SHA=a627d17dd1d8fde1c8fa73b3cc69ffe83b33cb71      # tradermonty/claude-trading-skills 2026-11-17
+FOUNDER_SHA=fd9385b0cfe1b96bebce3898fbd506d73eff5a9d      # Jakeschincariol/founder-skill 2026-10-06
+ANTHROPIC_SHA=e4bb5d960d87126ff3b3a8af1a104b7db67560ba    # anthropics/skills           2026-11-16
+ARS_SHA=f7da54e81b06da3e659c93f5309a1c0f98bd202a          # Imbad0202/academic-research-skills 2026-11-17
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -30,7 +36,8 @@ ok()   { OK+=("$1"); }
 bad()  { FAIL+=("$1"); echo "!! BAŞARISIZ: $1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 pipi() { pip install -q -U "$@" 2>/dev/null || pip3 install -q -U "$@" 2>/dev/null || python3 -m pip install -q -U --user "$@"; }
-clone(){ git clone -q --depth 1 "https://github.com/$1" "$2"; }
+# İncelenmiş sürüme sabitlenmiş indirme: clone sahip/depo hedef SHA
+clone(){ mkdir -p "$2" && git -C "$2" init -q && git -C "$2" fetch -q --depth 1 "https://github.com/$1" "$3" && git -C "$2" checkout -q FETCH_HEAD; }
 
 have claude || { echo "Claude Code bulunamadı. Önce: curl -fsSL https://claude.ai/install.sh | bash"; exit 1; }
 have git    || { echo "git gerekli."; exit 1; }
@@ -85,13 +92,13 @@ if [ "$BORSA" = 1 ]; then
   claude mcp remove --scope user borsa >/dev/null 2>&1
   claude mcp add --scope user borsa -- "$(command -v uvx)" --from "git+https://github.com/saidsurucu/borsa-mcp@$BORSA_COMMIT" borsa-mcp >/dev/null 2>&1 \
     && ok "borsa MCP" || bad "borsa MCP"
-  clone saidsurucu/borsaci "$tmp/borsaci" && rm -rf ~/.claude/skills/borsaci && cp -r "$tmp/borsaci/skill/borsaci" ~/.claude/skills/ && ok "borsaci skill" || bad "borsaci skill"
+  clone saidsurucu/borsaci "$tmp/borsaci" "$BORSACI_SHA" && rm -rf ~/.claude/skills/borsaci && cp -r "$tmp/borsaci/skill/borsaci" ~/.claude/skills/ && ok "borsaci skill" || bad "borsaci skill"
 fi
 
 # ---------------------------------------------------------------- 4 TRADING
 if [ "$TRADING" = 1 ]; then
   log "4/7 claude-trading-skills ($TRADING_SET)"
-  if clone tradermonty/claude-trading-skills "$tmp/cts"; then
+  if clone tradermonty/claude-trading-skills "$tmp/cts" "$TRADING_SHA"; then
     if [ "$TRADING_SET" = core ]; then
       list="trading-skills-navigator position-sizer trader-memory-core pre-trade-discipline-gate drawdown-circuit-breaker backtest-expert trade-performance-coach"
     else
@@ -105,7 +112,7 @@ fi
 # ---------------------------------------------------------------- 5 FOUNDER
 if [ "$FOUNDER" = 1 ]; then
   log "5/7 founder-skill"
-  if clone Jakeschincariol/founder-skill "$tmp/fs"; then
+  if clone Jakeschincariol/founder-skill "$tmp/fs" "$FOUNDER_SHA"; then
     for d in "$tmp/fs/skills/"*/; do s=$(basename "$d"); rm -rf ~/.claude/skills/$s; cp -r "$d" ~/.claude/skills/; done
     ok "founder skill ($(ls "$tmp/fs/skills" | wc -l | tr -d ' ') adet)"
   else bad "founder skills"; fi
@@ -114,13 +121,13 @@ fi
 # ---------------------------------------------------------------- 6 EK SKILLER
 if [ "$EK_SKILLER" = 1 ]; then
   log "6/7 Ek skill'ler (kancasız)"
-  if clone anthropics/skills "$tmp/anthropic"; then
+  if clone anthropics/skills "$tmp/anthropic" "$ANTHROPIC_SHA"; then
     for s in discernment-nudge mcp-builder doc-coauthoring; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/anthropic/skills/$s" ~/.claude/skills/; done
     ok "discernment-nudge, mcp-builder, doc-coauthoring"
   else bad "anthropic skills"; fi
   SRC=~/.claude/skill-sources/academic-research-skills
   rm -rf "$SRC"
-  if clone Imbad0202/academic-research-skills "$SRC"; then
+  if clone Imbad0202/academic-research-skills "$SRC" "$ARS_SHA"; then
     rm -rf "$SRC/hooks" "$SRC/.git"
     for s in deep-research sr-screener; do
       [ -e "$SRC/$s/shared" ]  || ln -s ../shared  "$SRC/$s/shared"
