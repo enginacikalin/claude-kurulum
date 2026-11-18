@@ -17,6 +17,7 @@
 #   + INSPECTOR   : MCP Inspector (MCP sunucularını test etmek için)
 #   + WEB         : web sitesi kalite, SEO, erişilebilirlik skill'leri + modern-web-guidance
 #                   (PAZARLAMA=0 ile 12 reklam/pazarlama skill'i atlanır)
+#   + TASARIM     : diagram-design + brand-voice (3 skill, 5 alt ajan)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -34,6 +35,8 @@ MKT_SHA=73573e94a06a39965978b3fa1f9c1eace8cebc7c          # coreyhaines31/market
 JK_SHA=547d415dc10a23e66088eba5aa6664e6e772432c           # jakubkrehel/skills                2026-11-18
 MWG_SHA=64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65          # GoogleChrome/modern-web-guidance  2026-11-16
 MWG_NPM=1.0.1                                             # npx sürümü (@latest yerine)
+DD_SHA=bddddb607f0416815084b7db25255ee646076ca9           # cathrynlavery/diagram-design      2026-11-18
+KWP_SHA=b4c9a4e1de4b42868b74a6fe30ac766f64e43a3e          # anthropics/knowledge-work-plugins 2026-11-18
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -184,6 +187,22 @@ if [ "${WEB:-1}" = 1 ]; then
       ~/.claude/skills/modern-web-guidance/SKILL.md && rm -f ~/.claude/skills/modern-web-guidance/SKILL.md.bak
     ok "modern-web-guidance (npm $MWG_NPM, telemetri komut bazında kapalı)"
   else bad "modern-web-guidance"; fi
+fi
+
+# ---------------------------------------------------------------- TASARIM VE MARKA
+if [ "${TASARIM:-1}" = 1 ]; then
+  log "Diyagram ve marka sesi (kancasız, sabit sürüm)"
+  if clone cathrynlavery/diagram-design "$tmp/dd" "$DD_SHA"; then
+    rm -rf ~/.claude/skills/diagram-design; cp -r "$tmp/dd/skills/diagram-design" ~/.claude/skills/
+    ok "diagram-design"
+  else bad "diagram-design"; fi
+  if clone anthropics/knowledge-work-plugins "$tmp/kwp" "$KWP_SHA"; then
+    BV="$tmp/kwp/partner-built/brand-voice"
+    for d in "$BV/skills/"*/; do s=$(basename "$d"); rm -rf ~/.claude/skills/$s; cp -r "$d" ~/.claude/skills/; done
+    # Skill'lerin uzun ve kritik metinlerde çağırdığı alt ajanlar (eklentinin dış servis bağlantıları kurulmaz)
+    mkdir -p ~/.claude/agents && cp "$BV/agents/"*.md ~/.claude/agents/
+    ok "brand-voice (3 skill + $(ls "$BV/agents" | wc -l | tr -d ' ') alt ajan)"
+  else bad "brand-voice"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
