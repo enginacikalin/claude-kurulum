@@ -34,8 +34,12 @@ Seçmeli kurulum için bölümleri kapatabilirsiniz: `TRADING_SET=core bash kur.
 - **Reklam ve pazarlama seçkisi (12):** ad-creative, ads, copywriting, social, content-strategy, ai-seo, public-relations, emails, customer-research, marketing-plan, image, video (coreyhaines31/marketingskills, sabit SHA; `PAZARLAMA=0` ile atlanır)
 - **Bilim (BILIM):** K-Dense seçkisi: pymoo, experimental-design, uncertainty-and-units, statistical-analysis, scientific-visualization, matplotlib, pymatgen, lab-hardware-cad; materials-simulation seçkisi: numerical-stability, convergence-study, post-processing, simulation-validator, parameter-optimization (API anahtarı gerektirmeyenler, sabit SHA; `BILIM=0` ile atlanır)
 - **Tasarım ve marka (TASARIM):** diagram-design, brand-voice (3 skill + 5 alt ajan; dış servis bağlantıları kurulmaz), sabit SHA; `TASARIM=0` ile atlanır
-- **Kendi skill'lerimiz:** `arac-degerlendirme`: GitHub deposu, eklenti, skill veya MCP kurmadan önce güvenlik, telif, akademik etik ve uygunluk değerlendirmesi ; `makale-ilkeleri`: akademik metinle her çalışmada akademik dürüstlük ve Q1 hakem kontrolü (`skills/` klasörü)
+- **Kendi skill'lerimiz:** `arac-degerlendirme`: GitHub deposu, eklenti, skill veya MCP kurmadan önce güvenlik, telif, akademik etik ve uygunluk değerlendirmesi ; `makale-ilkeleri`: akademik metinle her çalışmada akademik dürüstlük ve Q1 hakem kontrolü; `arge-tarifleri`: DoE, ölçüm belirsizliği, Pareto optimizasyonu, numune tutucu CAD, veri işleme ve simülasyon doğrulama için yönlendirici (`skills/` klasörü)
 - **Araçlar:** MCP Inspector 2.16.0 (`mcp-inspector --cli <sunucu komutu> --method tools/list` ile MCP sunucularını test etmek için)
 - **Skill'ler:** borsaci, claude-trading-skills, founder-skill, discernment-nudge, mcp-builder, doc-coauthoring, deep-research, sr-screener
 
 Kurulan her depo kurulmadan önce incelendi. Skill depoları ve borsa-mcp, `kur.sh` başındaki SHA değerleriyle incelenmiş sürüme sabitlenmiştir; upstream'deki yeni bir değişiklik otomatik gelmez. Güncellemek için önce yeni sürümü inceleyin, sonra SHA'yı değiştirin. Kancası, ağ bağlantısı veya telif riski olanlar ya kancasız kuruluyor ya da listeye alınmadı.
+
+## Claude uygulamasında (claude.ai) kullanmak
+
+`claude-ai-yukleme/` klasöründeki ZIP dosyaları, kendi skill'lerimizin claude.ai'ye yüklenebilir paketleridir. Claude uygulamasında **Ayarlar → Capabilities** altında kod çalıştırmayı açın, ardından **Customize → Skills** bölümünden ZIP'i yükleyin. Skill'ler klasörde değişirse ZIP'leri yeniden üretin: `cd skills && for s in */; do zip -qr ../claude-ai-yukleme/${s%/}.zip ${s%/}; done`
