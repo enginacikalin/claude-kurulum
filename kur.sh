@@ -16,6 +16,7 @@
 #   7 KURALLAR    : ~/.claude/CLAUDE.md'ye Scrapling ve borsa kuralları
 #   + INSPECTOR   : MCP Inspector (MCP sunucularını test etmek için)
 #   + WEB         : web sitesi kalite, SEO, erişilebilirlik skill'leri + modern-web-guidance
+#                   (PAZARLAMA=0 ile 12 reklam/pazarlama skill'i atlanır)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -163,6 +164,12 @@ if [ "${WEB:-1}" = 1 ]; then
   if clone coreyhaines31/marketingskills "$tmp/mkt" "$MKT_SHA"; then
     for s in seo-audit schema; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/mkt/skills/$s" ~/.claude/skills/; done
     ok "seo-audit, schema"
+    # Reklam ve pazarlama seçkisi (yalnızca metin; betik içeren conversion-tracking hariç)
+    if [ "${PAZARLAMA:-1}" = 1 ]; then
+      MKT_SET="ad-creative ads copywriting social content-strategy ai-seo public-relations emails customer-research marketing-plan image video"
+      for s in $MKT_SET; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/mkt/skills/$s" ~/.claude/skills/; done
+      ok "pazarlama seçkisi ($(echo $MKT_SET | wc -w | tr -d ' ') skill)"
+    fi
   else bad "marketingskills"; fi
   if clone jakubkrehel/skills "$tmp/jk" "$JK_SHA"; then
     rm -rf ~/.claude/skills/better-accessibility; cp -r "$tmp/jk/skills/better-accessibility" ~/.claude/skills/
