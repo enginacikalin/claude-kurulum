@@ -147,6 +147,12 @@ if [ "$EK_SKILLER" = 1 ]; then
   else bad "academic-research-skills"; fi
 fi
 
+# Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
+if [ -d "$HERE/skills" ]; then
+  for d in "$HERE/skills/"*/; do s=$(basename "$d"); rm -rf ~/.claude/skills/$s; cp -r "$d" ~/.claude/skills/; done
+  ok "kendi skill'lerimiz ($(ls "$HERE/skills" | tr '\n' ' '))"
+fi
+
 # ---------------------------------------------------------------- 7 KURALLAR
 if [ "$KURALLAR" = 1 ]; then
   log "7/7 CLAUDE.md kuralları"
