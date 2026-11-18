@@ -18,6 +18,7 @@
 #   + WEB         : web sitesi kalite, SEO, erişilebilirlik skill'leri + modern-web-guidance
 #                   (PAZARLAMA=0 ile 12 reklam/pazarlama skill'i atlanır)
 #   + TASARIM     : diagram-design + brand-voice (3 skill, 5 alt ajan)
+#   + BILIM       : K-Dense seçkisi (8) + materials-simulation seçkisi (5)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -37,6 +38,8 @@ MWG_SHA=64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65          # GoogleChrome/modern-
 MWG_NPM=1.0.1                                             # npx sürümü (@latest yerine)
 DD_SHA=bddddb607f0416815084b7db25255ee646076ca9           # cathrynlavery/diagram-design      2026-11-18
 KWP_SHA=b4c9a4e1de4b42868b74a6fe30ac766f64e43a3e          # anthropics/knowledge-work-plugins 2026-11-18
+KD_SHA=ec59a29a03d5c40f73ab40878df04860bc00e876           # K-Dense-AI/claude-scientific-skills 2026-11-16
+MS_SHA=a4bd93c4224fadcb27495eb7b9c9e13bc02b9417           # HeshamFS/materials-simulation-skills 2026-11-15
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -203,6 +206,28 @@ if [ "${TASARIM:-1}" = 1 ]; then
     mkdir -p ~/.claude/agents && cp "$BV/agents/"*.md ~/.claude/agents/
     ok "brand-voice (3 skill + $(ls "$BV/agents" | wc -l | tr -d ' ') alt ajan)"
   else bad "brand-voice"; fi
+fi
+
+# ---------------------------------------------------------------- BILIM (deney, analiz, simülasyon)
+if [ "${BILIM:-1}" = 1 ]; then
+  log "Bilimsel analiz ve simülasyon skill'leri (kancasız, API anahtarı gerektirmeyenler, sabit sürüm)"
+  if clone K-Dense-AI/claude-scientific-skills "$tmp/kd" "$KD_SHA"; then
+    KD_SET="pymoo experimental-design uncertainty-and-units statistical-analysis scientific-visualization matplotlib pymatgen lab-hardware-cad"
+    for s in $KD_SET; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/kd/skills/$s" ~/.claude/skills/; done
+    ok "K-Dense seçkisi ($(echo $KD_SET | wc -w | tr -d ' ') skill)"
+  else bad "K-Dense"; fi
+  if clone HeshamFS/materials-simulation-skills "$tmp/ms" "$MS_SHA"; then
+    for p in core-numerical/numerical-stability core-numerical/convergence-study simulation-workflow/post-processing \
+             simulation-workflow/simulation-validator simulation-workflow/parameter-optimization; do
+      s=$(basename "$p"); rm -rf ~/.claude/skills/$s; cp -r "$tmp/ms/skills/$p" ~/.claude/skills/
+      # ortak açıklama dosyasını skill'in içine al, yolu düzelt
+      if grep -q '\.\./\.\./GROUNDED_EXPLANATIONS.md' ~/.claude/skills/$s/SKILL.md; then
+        cp "$tmp/ms/skills/GROUNDED_EXPLANATIONS.md" ~/.claude/skills/$s/
+        sed -i.bak 's#\.\./\.\./GROUNDED_EXPLANATIONS.md#GROUNDED_EXPLANATIONS.md#g' ~/.claude/skills/$s/SKILL.md && rm -f ~/.claude/skills/$s/SKILL.md.bak
+      fi
+    done
+    ok "materials-simulation seçkisi (5 skill)"
+  else bad "materials-simulation-skills"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
