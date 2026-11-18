@@ -30,6 +30,7 @@ Seçmeli kurulum için bölümleri kapatabilirsiniz: `TRADING_SET=core bash kur.
 
 - **Eklentiler:** watch (claude-video), superpowers, karpathy-skills, ui-ux-pro-max, taste-skill, impeccable, hallmark, context7, claude-hud, last30days
 - **MCP bağlantıları:** scrapling (güvenlik kancasıyla), borsa (borsa-mcp, sabit sürüm `e3b45b2`, kalıcı araç olarak)
+- **Web sitesi skill'leri:** web-quality-skills (6), seo-audit, schema, better-accessibility, modern-web-guidance (npm 1.0.1, telemetri komut bazında kapalı); hepsi kancasız ve sabit sürüm
 - **Kendi skill'lerimiz:** `arac-degerlendirme`: GitHub deposu, eklenti, skill veya MCP kurmadan önce güvenlik, telif, akademik etik ve uygunluk değerlendirmesi ; `makale-ilkeleri`: akademik metinle her çalışmada akademik dürüstlük ve Q1 hakem kontrolü (`skills/` klasörü)
 - **Araçlar:** MCP Inspector 2.16.0 (`mcp-inspector --cli <sunucu komutu> --method tools/list` ile MCP sunucularını test etmek için)
 - **Skill'ler:** borsaci, claude-trading-skills, founder-skill, discernment-nudge, mcp-builder, doc-coauthoring, deep-research, sr-screener

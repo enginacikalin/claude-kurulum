@@ -15,6 +15,7 @@
 #                   deep-research, sr-screener (kancasız)
 #   7 KURALLAR    : ~/.claude/CLAUDE.md'ye Scrapling ve borsa kuralları
 #   + INSPECTOR   : MCP Inspector (MCP sunucularını test etmek için)
+#   + WEB         : web sitesi kalite, SEO, erişilebilirlik skill'leri + modern-web-guidance
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -27,6 +28,11 @@ TRADING_SHA=a627d17dd1d8fde1c8fa73b3cc69ffe83b33cb71      # tradermonty/claude-t
 FOUNDER_SHA=fd9385b0cfe1b96bebce3898fbd506d73eff5a9d      # Jakeschincariol/founder-skill 2026-10-06
 ANTHROPIC_SHA=e4bb5d960d87126ff3b3a8af1a104b7db67560ba    # anthropics/skills           2026-11-16
 ARS_SHA=f7da54e81b06da3e659c93f5309a1c0f98bd202a          # Imbad0202/academic-research-skills 2026-11-17
+WQ_SHA=afa8da942115f2961fdbfa80807ea0b232ff6c00           # addyosmani/web-quality-skills     2026-08-24
+MKT_SHA=73573e94a06a39965978b3fa1f9c1eace8cebc7c          # coreyhaines31/marketingskills     2026-11-17
+JK_SHA=547d415dc10a23e66088eba5aa6664e6e772432c           # jakubkrehel/skills                2026-11-18
+MWG_SHA=64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65          # GoogleChrome/modern-web-guidance  2026-11-16
+MWG_NPM=1.0.1                                             # npx sürümü (@latest yerine)
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -145,6 +151,32 @@ if [ "$EK_SKILLER" = 1 ]; then
     done
     ok "deep-research, sr-screener"
   else bad "academic-research-skills"; fi
+fi
+
+# ---------------------------------------------------------------- WEB (site geliştirme)
+if [ "${WEB:-1}" = 1 ]; then
+  log "Web sitesi skill'leri (kancasız, sabit sürüm)"
+  if clone addyosmani/web-quality-skills "$tmp/wq" "$WQ_SHA"; then
+    for d in "$tmp/wq/skills/"*/; do s=$(basename "$d"); rm -rf ~/.claude/skills/$s; cp -r "$d" ~/.claude/skills/; done
+    ok "web-quality-skills ($(ls "$tmp/wq/skills" | wc -l | tr -d ' ') skill)"
+  else bad "web-quality-skills"; fi
+  if clone coreyhaines31/marketingskills "$tmp/mkt" "$MKT_SHA"; then
+    for s in seo-audit schema; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/mkt/skills/$s" ~/.claude/skills/; done
+    ok "seo-audit, schema"
+  else bad "marketingskills"; fi
+  if clone jakubkrehel/skills "$tmp/jk" "$JK_SHA"; then
+    rm -rf ~/.claude/skills/better-accessibility; cp -r "$tmp/jk/skills/better-accessibility" ~/.claude/skills/
+    ok "better-accessibility"
+  else bad "jakubkrehel/skills"; fi
+  if clone GoogleChrome/modern-web-guidance "$tmp/mwg" "$MWG_SHA"; then
+    rm -rf ~/.claude/skills/modern-web-guidance; cp -r "$tmp/mwg/skills/modern-web-guidance" ~/.claude/skills/
+    # Sürümü incelenen npm sürümüne sabitle ve kullanım verisini YALNIZCA bu komutlar için kapat
+    # (genel Claude Code ayarlarına dokunmadan): "npx -y modern-web-guidance@latest" ->
+    # "DISABLE_TELEMETRY=1 npx -y modern-web-guidance@<sürüm>"
+    sed -i.bak -E "s/(npx -y |pnpx )?modern-web-guidance@latest/DISABLE_TELEMETRY=1 \1modern-web-guidance@$MWG_NPM/g" \
+      ~/.claude/skills/modern-web-guidance/SKILL.md && rm -f ~/.claude/skills/modern-web-guidance/SKILL.md.bak
+    ok "modern-web-guidance (npm $MWG_NPM, telemetri komut bazında kapalı)"
+  else bad "modern-web-guidance"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
