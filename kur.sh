@@ -14,6 +14,7 @@
 #   6 EK_SKILLER  : discernment-nudge, mcp-builder, doc-coauthoring,
 #                   deep-research, sr-screener (kancasız)
 #   7 KURALLAR    : ~/.claude/CLAUDE.md'ye Scrapling ve borsa kuralları
+#   + INSPECTOR   : MCP Inspector (MCP sunucularını test etmek için)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -89,10 +90,18 @@ fi
 # ---------------------------------------------------------------- 3 BORSA
 if [ "$BORSA" = 1 ]; then
   log "3/7 Borsa MCP (yerel, sabit sürüm) + borsaci"
+  # Kalıcı araç olarak kur: her oturum açılışında git'ten yeniden çözümlemesin (zaman aşımını önler)
   claude mcp remove --scope user borsa >/dev/null 2>&1
-  claude mcp add --scope user borsa -- "$(command -v uvx)" --from "git+https://github.com/saidsurucu/borsa-mcp@$BORSA_COMMIT" borsa-mcp >/dev/null 2>&1 \
-    && ok "borsa MCP" || bad "borsa MCP"
+  if uv tool install -q --force "git+https://github.com/saidsurucu/borsa-mcp@$BORSA_COMMIT" >/dev/null 2>&1 \
+     && BM=$(command -v borsa-mcp || echo "$HOME/.local/bin/borsa-mcp") && [ -x "$BM" ]; then
+    claude mcp add --scope user borsa "$BM" >/dev/null 2>&1 && ok "borsa MCP" || bad "borsa MCP"
+  else bad "borsa-mcp kurulumu"; fi
   clone saidsurucu/borsaci "$tmp/borsaci" "$BORSACI_SHA" && rm -rf ~/.claude/skills/borsaci && cp -r "$tmp/borsaci/skill/borsaci" ~/.claude/skills/ && ok "borsaci skill" || bad "borsaci skill"
+fi
+
+# MCP Inspector (resmî MCP test aracı, sabit sürüm): mcp-inspector --cli <komut> --method tools/list
+if [ "${INSPECTOR:-1}" = 1 ]; then
+  npm install -g -q @modelcontextprotocol/inspector@2.16.0 >/dev/null 2>&1 && ok "MCP Inspector 2.16.0" || bad "MCP Inspector"
 fi
 
 # ---------------------------------------------------------------- 4 TRADING

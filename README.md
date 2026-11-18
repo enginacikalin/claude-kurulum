@@ -29,7 +29,8 @@ Seçmeli kurulum için bölümleri kapatabilirsiniz: `TRADING_SET=core bash kur.
 ## Kurulanlar
 
 - **Eklentiler:** watch (claude-video), superpowers, karpathy-skills, ui-ux-pro-max, taste-skill, impeccable, hallmark, context7, claude-hud, last30days
-- **MCP bağlantıları:** scrapling (güvenlik kancasıyla), borsa (borsa-mcp, sabit sürüm `e3b45b2`)
+- **MCP bağlantıları:** scrapling (güvenlik kancasıyla), borsa (borsa-mcp, sabit sürüm `e3b45b2`, kalıcı araç olarak)
+- **Araçlar:** MCP Inspector 2.16.0 (`mcp-inspector --cli <sunucu komutu> --method tools/list` ile MCP sunucularını test etmek için)
 - **Skill'ler:** borsaci, claude-trading-skills, founder-skill, discernment-nudge, mcp-builder, doc-coauthoring, deep-research, sr-screener
 
 Kurulan her depo kurulmadan önce incelendi. Skill depoları ve borsa-mcp, `kur.sh` başındaki SHA değerleriyle incelenmiş sürüme sabitlenmiştir; upstream'deki yeni bir değişiklik otomatik gelmez. Güncellemek için önce yeni sürümü inceleyin, sonra SHA'yı değiştirin. Kancası, ağ bağlantısı veya telif riski olanlar ya kancasız kuruluyor ya da listeye alınmadı.
