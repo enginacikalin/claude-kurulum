@@ -157,8 +157,17 @@ fi
 if [ "$KURALLAR" = 1 ]; then
   log "7/7 CLAUDE.md kuralları"
   touch ~/.claude/CLAUDE.md
-  grep -q "Scrapling) kuralları" ~/.claude/CLAUDE.md || { printf '\n'; sed -n '/^## Web/,/^## Türk/p' "$HERE/CLAUDE-kurallar.md" | sed '$d'; } >> ~/.claude/CLAUDE.md
-  grep -q "borsa MCP / borsaci" ~/.claude/CLAUDE.md || { printf '\n'; sed -n '/^## Türk/,$p' "$HERE/CLAUDE-kurallar.md"; } >> ~/.claude/CLAUDE.md
+  # CLAUDE-kurallar.md'deki her "## " bölümünü, başlığı henüz yoksa ekle
+  python3 - "$HERE/CLAUDE-kurallar.md" <<'PYEOF'
+import os, re, sys
+src = open(sys.argv[1], encoding="utf-8").read()
+dst_p = os.path.expanduser("~/.claude/CLAUDE.md")
+dst = open(dst_p, encoding="utf-8").read()
+parts = re.split(r"(?m)^(?=## )", src)
+add = [p.rstrip() for p in parts if p.startswith("## ") and p.splitlines()[0] not in dst]
+if add:
+    open(dst_p, "a", encoding="utf-8").write("\n\n" + "\n\n".join(add) + "\n")
+PYEOF
   ok "kurallar"
 fi
 

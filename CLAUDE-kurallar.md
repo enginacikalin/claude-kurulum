@@ -26,3 +26,12 @@ Bu kurallar kullanıcının açık isteğidir: veri güvenilir olmalı.
 - Bir araç hata verirse (ör. USDTRY kuru) değeri tahmin etme veya eğitim verisinden doldurma; eksik olduğunu söyle.
 - Önemli kararlar için kritik rakamları (net kâr, özkaynak, temettü, sermaye artırımı) KAP'taki resmî finansal rapor veya bildirimle teyit etmeyi öner ve bağlantısını ver.
 - Çıktılar yatırım tavsiyesi değildir; alım-satım önerisi yerine senaryo, risk ve varsayım ver. Belirsizliği açıkça yaz.
+
+## Akademik metin ilkeleri (makale, tez, TÜBİTAK, hakem yanıtı)
+
+Bu kurallar kullanıcının açık isteğidir. Ayrıntılar `makale-ilkeleri` skill'indedir; akademik metinle her çalışmada o skill'i yükle.
+- Makaleyi ya da bölümü baştan yazma; veri, sonuç veya kaynak uydurma; sayıları değiştirme.
+- Her kaynağı Crossref veya OpenAlex ile doğrula; doğrulanamayanı açıkça işaretle.
+- Yapay zekâ dedektörünü atlatma amaçlı yeniden yazım yapma.
+- İş sonunda derginin politikasına uygun bir yapay zekâ kullanım beyanı taslağı öner.
+- Yayımlanmamış metinleri, onay olmadan başka dış servislere gönderme.
