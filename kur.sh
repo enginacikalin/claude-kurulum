@@ -17,7 +17,7 @@
 #   + INSPECTOR   : MCP Inspector (MCP sunucularını test etmek için)
 #   + WEB         : web sitesi kalite, SEO, erişilebilirlik skill'leri + modern-web-guidance
 #                   (PAZARLAMA=0 ile 12 reklam/pazarlama skill'i atlanır)
-#   + TASARIM     : diagram-design + brand-voice (3 skill, 5 alt ajan)
+#   + TASARIM     : archify + brand-voice (3 skill, 5 alt ajan)
 #   + BILIM       : K-Dense seçkisi (8) + materials-simulation seçkisi (5)
 # =============================================================================
 set -uo pipefail
@@ -36,7 +36,7 @@ MKT_SHA=73573e94a06a39965978b3fa1f9c1eace8cebc7c          # coreyhaines31/market
 JK_SHA=547d415dc10a23e66088eba5aa6664e6e772432c           # jakubkrehel/skills                2026-11-18
 MWG_SHA=64a6d708f5a43f2cd3fde5d4d7db3905ba1bdf65          # GoogleChrome/modern-web-guidance  2026-11-16
 MWG_NPM=1.0.1                                             # npx sürümü (@latest yerine)
-DD_SHA=bddddb607f0416815084b7db25255ee646076ca9           # cathrynlavery/diagram-design      2026-11-18
+AR_SHA=44781293f38728baf04dbad33ce1a0cef8c39cca           # tt-a1i/archify                    2026-11-17 (v3.2)
 KWP_SHA=b4c9a4e1de4b42868b74a6fe30ac766f64e43a3e          # anthropics/knowledge-work-plugins 2026-11-18
 KD_SHA=ec59a29a03d5c40f73ab40878df04860bc00e876           # K-Dense-AI/claude-scientific-skills 2026-11-16
 MS_SHA=a4bd93c4224fadcb27495eb7b9c9e13bc02b9417           # HeshamFS/materials-simulation-skills 2026-11-15
@@ -194,11 +194,15 @@ fi
 
 # ---------------------------------------------------------------- TASARIM VE MARKA
 if [ "${TASARIM:-1}" = 1 ]; then
-  log "Diyagram ve marka sesi (kancasız, sabit sürüm)"
-  if clone cathrynlavery/diagram-design "$tmp/dd" "$DD_SHA"; then
-    rm -rf ~/.claude/skills/diagram-design; cp -r "$tmp/dd/skills/diagram-design" ~/.claude/skills/
-    ok "diagram-design"
-  else bad "diagram-design"; fi
+  log "Diyagram (archify) ve marka sesi (kancasız, sabit sürüm)"
+  if clone tt-a1i/archify "$tmp/ar" "$AR_SHA"; then
+    rm -rf ~/.claude/skills/diagram-design ~/.claude/skills/archify   # diagram-design'ın yerini archify aldı
+    cp -r "$tmp/ar/archify" ~/.claude/skills/
+    # Sürüm sabit olduğu için güncelleme kontrolünü yalnızca bu kopyada kapat (genel ayarlara dokunmadan)
+    f=~/.claude/skills/archify/scripts/check-update.mjs
+    sed -i.bak "s#return process.env.ARCHIFY_UPDATE_CHECK_DISABLED === '1';#return true; // claude-kurulum: sürüm sabit, güncelleme kontrolü kapalı#" "$f" && rm -f "$f.bak"
+    grep -q "claude-kurulum: sürüm sabit" "$f" && ok "archify 3.2 (güncelleme kontrolü kapalı)" || bad "archify güncelleme kontrolü kapatılamadı"
+  else bad "archify"; fi
   if clone anthropics/knowledge-work-plugins "$tmp/kwp" "$KWP_SHA"; then
     BV="$tmp/kwp/partner-built/brand-voice"
     for d in "$BV/skills/"*/; do s=$(basename "$d"); rm -rf ~/.claude/skills/$s; cp -r "$d" ~/.claude/skills/; done
