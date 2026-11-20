@@ -19,6 +19,7 @@
 #                   (PAZARLAMA=0 ile 12 reklam/pazarlama skill'i atlanır)
 #   + TASARIM     : archify + brand-voice (3 skill, 5 alt ajan)
 #   + BILIM       : K-Dense seçkisi (8) + materials-simulation seçkisi (5)
+#   + MOBIL       : app-store-compliance (skill, /app-store-audit, gönderim öncesi koruma kancası)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -40,6 +41,7 @@ AR_SHA=44781293f38728baf04dbad33ce1a0cef8c39cca           # tt-a1i/archify      
 KWP_SHA=b4c9a4e1de4b42868b74a6fe30ac766f64e43a3e          # anthropics/knowledge-work-plugins 2026-11-18
 KD_SHA=ec59a29a03d5c40f73ab40878df04860bc00e876           # K-Dense-AI/claude-scientific-skills 2026-11-16
 MS_SHA=a4bd93c4224fadcb27495eb7b9c9e13bc02b9417           # HeshamFS/materials-simulation-skills 2026-11-15
+ASC_SHA=d2156bab9d7189835631c0a99adcc2479d32138d          # mjmirza/app-store-compliance      2026-11-15 (ORA 2.3: bireysel/okul ücretsiz)
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -232,6 +234,17 @@ if [ "${BILIM:-1}" = 1 ]; then
     done
     ok "materials-simulation seçkisi (5 skill)"
   else bad "materials-simulation-skills"; fi
+fi
+
+# ---------------------------------------------------------------- MOBIL (App Store / Google Play uyumu)
+if [ "${MOBIL:-1}" = 1 ]; then
+  log "App Store uyum denetimi (skill + /app-store-audit + gönderim öncesi koruma kancası)"
+  if clone mjmirza/app-store-compliance "$tmp/asc" "$ASC_SHA"; then
+    # Projenin kendi kurucusu: skill, komut ve yalnızca mağaza gönderim komutlarında devreye giren PreToolUse kancası
+    if bash "$tmp/asc/scripts/install.sh" --tool claude >"$tmp/asc-kur.log" 2>&1; then
+      ok "app-store-compliance (skill, /app-store-audit, gönderim koruması)"
+    else bad "app-store-compliance (ayrıntı: kurulum günlüğü)"; tail -5 "$tmp/asc-kur.log"; fi
+  else bad "app-store-compliance"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
