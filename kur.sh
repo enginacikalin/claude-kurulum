@@ -21,6 +21,7 @@
 #   + BILIM       : K-Dense seçkisi (8) + materials-simulation seçkisi (5)
 #   + MOBIL       : app-store-compliance (skill, /app-store-audit, gönderim öncesi koruma kancası)
 #   + VIDEO       : HyperFrames (HTML'den video; 5 skill, CLI 0.9.77'ye sabit, telemetri kapalı)
+#   + SEO         : seo-title-optimization, internal-linking, domain-migration, blog-refresher
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -45,6 +46,7 @@ MS_SHA=a4bd93c4224fadcb27495eb7b9c9e13bc02b9417           # HeshamFS/materials-s
 ASC_SHA=d2156bab9d7189835631c0a99adcc2479d32138d          # mjmirza/app-store-compliance      2026-11-15 (ORA 2.3: bireysel/okul ücretsiz)
 HF_SHA=7cb605c787f4e85f66a2a46df60f8fdbe13faad6           # heygen-com/hyperframes            2026-11-21 (CLI 0.9.77)
 HF_CLI=0.9.77                                             # npm'deki hyperframes CLI sürümü (sabit)
+SEO_SHA=a158c36a1c2c84a44ee7a1ae69c009caf73e1a35          # Illyism/seo-skills               2026-11-20
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -278,6 +280,28 @@ PYEOF
       ok "HyperFrames (5 skill, CLI $HF_CLI sabit, telemetri ve otomatik güncelleme kapalı)"
     else bad "HyperFrames başlatıcı yaması"; fi
   else bad "HyperFrames"; fi
+fi
+
+# ---------------------------------------------------------------- SEO (site yayını için ek SEO skill'leri)
+if [ "${SEO:-1}" = 1 ]; then
+  log "SEO seçkisi: Illyism/seo-skills'ten 4 skill (kancasız; uzak MCP bağlantıları ve ticari yönlendirmeler hariç)"
+  if clone Illyism/seo-skills "$tmp/seo" "$SEO_SHA"; then
+    SEO_SET="seo-title-optimization internal-linking domain-migration blog-refresher"
+    for s in $SEO_SET; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/seo/seo/$s" ~/.claude/skills/; done
+    # Yazarın ücretli ürünlerine (LinkDR, AI SEO Tracker) giden reklam satırlarını kopyadan çıkar
+    for s in $SEO_SET; do
+      python3 - "$HOME/.claude/skills/$s/SKILL.md" <<'PYEOF'
+import re, sys
+f = sys.argv[1]
+lines = open(f, encoding="utf-8").read().split("\n")
+kept = [l for l in lines if not re.search(r"linkdr\.com|aiseotracker\.com", l, re.I)]
+open(f, "w", encoding="utf-8").write("\n".join(kept))
+PYEOF
+    done
+    if ! grep -rqiE 'linkdr\.com|aiseotracker\.com' $(for s in $SEO_SET; do echo ~/.claude/skills/$s; done); then
+      ok "SEO seçkisi (4 skill, ticari yönlendirmeler çıkarıldı)"
+    else bad "SEO seçkisi temizliği"; fi
+  else bad "seo-skills"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
