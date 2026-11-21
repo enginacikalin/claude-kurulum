@@ -20,6 +20,7 @@
 #   + TASARIM     : archify + brand-voice (3 skill, 5 alt ajan)
 #   + BILIM       : K-Dense seçkisi (8) + materials-simulation seçkisi (5)
 #   + MOBIL       : app-store-compliance (skill, /app-store-audit, gönderim öncesi koruma kancası)
+#   + VIDEO       : HyperFrames (HTML'den video; 5 skill, CLI 0.9.77'ye sabit, telemetri kapalı)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -42,6 +43,8 @@ KWP_SHA=b4c9a4e1de4b42868b74a6fe30ac766f64e43a3e          # anthropics/knowledge
 KD_SHA=ec59a29a03d5c40f73ab40878df04860bc00e876           # K-Dense-AI/claude-scientific-skills 2026-11-16
 MS_SHA=a4bd93c4224fadcb27495eb7b9c9e13bc02b9417           # HeshamFS/materials-simulation-skills 2026-11-15
 ASC_SHA=d2156bab9d7189835631c0a99adcc2479d32138d          # mjmirza/app-store-compliance      2026-11-15 (ORA 2.3: bireysel/okul ücretsiz)
+HF_SHA=7cb605c787f4e85f66a2a46df60f8fdbe13faad6           # heygen-com/hyperframes            2026-11-21 (CLI 0.9.77)
+HF_CLI=0.9.77                                             # npm'deki hyperframes CLI sürümü (sabit)
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -245,6 +248,36 @@ if [ "${MOBIL:-1}" = 1 ]; then
       ok "app-store-compliance (skill, /app-store-audit, gönderim koruması)"
     else bad "app-store-compliance (ayrıntı: kurulum günlüğü)"; tail -5 "$tmp/asc-kur.log"; fi
   else bad "app-store-compliance"; fi
+fi
+
+# ---------------------------------------------------------------- VIDEO (HyperFrames: HTML'den video)
+if [ "${VIDEO:-1}" = 1 ]; then
+  log "HyperFrames video skill'leri (kancasız, CLI $HF_CLI'e sabit, kullanım verisi ve otomatik güncelleme kapalı)"
+  if clone heygen-com/hyperframes "$tmp/hf" "$HF_SHA"; then
+    # Çekirdek 5 skill. media-use (HeyGen girişi, hazır görsel/müzik kaynakları), figma, reverse-any-video
+    # (başkasının videosunu yeniden kurma) ve remotion-to-hyperframes bilinçli olarak alınmaz.
+    for s in hyperframes hyperframes-cli hyperframes-registry slideshow style-sampling; do
+      rm -rf ~/.claude/skills/$s; cp -r "$tmp/hf/skills/$s" ~/.claude/skills/
+    done
+    HF_CLI="$HF_CLI" python3 - <<'PYEOF'
+import os, re
+f = os.path.expanduser("~/.claude/skills/hyperframes/scripts/plugin-cli.mjs")
+t = open(f, encoding="utf-8").read()
+ver = os.environ["HF_CLI"]
+a = "  let release = version;\n"
+b = "    : { ...env };\n"
+if "claude-kurulum" not in t:
+    assert a in t and b in t, "plugin-cli.mjs beklenen biçimde değil"
+    t = t.replace(a, a + f"  // claude-kurulum: CLI sürümü sabit (bağımsız kurulum varsayılanı 'en yeni')\n"
+                       f"  if (!version && env.HYPERFRAMES_STANDALONE_CLI_VERSION === undefined)\n"
+                       f"    env = {{ ...env, HYPERFRAMES_STANDALONE_CLI_VERSION: \"{ver}\" }};\n", 1)
+    t = t.replace(b, '    : { HYPERFRAMES_SKIP_SKILLS: "1", HYPERFRAMES_NO_UPDATE_CHECK: "1", HYPERFRAMES_NO_TELEMETRY: "1", DO_NOT_TRACK: "1", ...env }; // claude-kurulum\n', 1)
+    open(f, "w", encoding="utf-8").write(t)
+PYEOF
+    if grep -q 'claude-kurulum' ~/.claude/skills/hyperframes/scripts/plugin-cli.mjs; then
+      ok "HyperFrames (5 skill, CLI $HF_CLI sabit, telemetri ve otomatik güncelleme kapalı)"
+    else bad "HyperFrames başlatıcı yaması"; fi
+  else bad "HyperFrames"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
