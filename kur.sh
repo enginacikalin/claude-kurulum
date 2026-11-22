@@ -22,6 +22,7 @@
 #   + MOBIL       : app-store-compliance (skill, /app-store-audit, gönderim öncesi koruma kancası)
 #   + VIDEO       : HyperFrames (HTML'den video; 5 skill, CLI 0.9.77'ye sabit, telemetri kapalı)
 #   + SEO         : seo-title-optimization, internal-linking, domain-migration, blog-refresher
+#   + RESMI       : playground (claude-plugins-official'dan); EK_SKILLER'a webapp-testing eklendi
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -47,6 +48,7 @@ ASC_SHA=d2156bab9d7189835631c0a99adcc2479d32138d          # mjmirza/app-store-co
 HF_SHA=7cb605c787f4e85f66a2a46df60f8fdbe13faad6           # heygen-com/hyperframes            2026-11-21 (CLI 0.9.77)
 HF_CLI=0.9.77                                             # npm'deki hyperframes CLI sürümü (sabit)
 SEO_SHA=a158c36a1c2c84a44ee7a1ae69c009caf73e1a35          # Illyism/seo-skills               2026-11-20
+CPO_SHA=73c8cf3ea7e296057b467990f2f5d61b4c922260          # anthropics/claude-plugins-official 2026-11-20
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -151,8 +153,8 @@ fi
 if [ "$EK_SKILLER" = 1 ]; then
   log "6/7 Ek skill'ler (kancasız)"
   if clone anthropics/skills "$tmp/anthropic" "$ANTHROPIC_SHA"; then
-    for s in discernment-nudge mcp-builder doc-coauthoring; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/anthropic/skills/$s" ~/.claude/skills/; done
-    ok "discernment-nudge, mcp-builder, doc-coauthoring"
+    for s in discernment-nudge mcp-builder doc-coauthoring webapp-testing; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/anthropic/skills/$s" ~/.claude/skills/; done
+    ok "discernment-nudge, mcp-builder, doc-coauthoring, webapp-testing"
   else bad "anthropic skills"; fi
   SRC=~/.claude/skill-sources/academic-research-skills
   rm -rf "$SRC"
@@ -302,6 +304,15 @@ PYEOF
       ok "SEO seçkisi (4 skill, ticari yönlendirmeler çıkarıldı)"
     else bad "SEO seçkisi temizliği"; fi
   else bad "seo-skills"; fi
+fi
+
+# ---------------------------------------------------------------- RESMI (Anthropic'in resmî eklenti dizininden seçme)
+if [ "${RESMI:-1}" = 1 ]; then
+  log "Anthropic resmî eklenti dizininden seçme (yalnızca skill dosyaları; kancalı eklentiler alınmaz)"
+  if clone anthropics/claude-plugins-official "$tmp/cpo" "$CPO_SHA"; then
+    rm -rf ~/.claude/skills/playground; cp -r "$tmp/cpo/plugins/playground/skills/playground" ~/.claude/skills/
+    ok "playground (etkileşimli HTML keşif sayfaları)"
+  else bad "claude-plugins-official"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
