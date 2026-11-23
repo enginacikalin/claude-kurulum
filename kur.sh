@@ -23,6 +23,7 @@
 #   + VIDEO       : HyperFrames (HTML'den video; 5 skill, CLI 0.9.77'ye sabit, telemetri kapalı)
 #   + SEO         : seo-title-optimization, internal-linking, domain-migration, blog-refresher
 #   + RESMI       : playground (claude-plugins-official'dan); EK_SKILLER'a webapp-testing eklendi
+#   + KESIF       : find-skills (yalnızca arama; onaysız kurulum adımı çıkarıldı)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -49,6 +50,8 @@ HF_SHA=7cb605c787f4e85f66a2a46df60f8fdbe13faad6           # heygen-com/hyperfram
 HF_CLI=0.9.77                                             # npm'deki hyperframes CLI sürümü (sabit)
 SEO_SHA=a158c36a1c2c84a44ee7a1ae69c009caf73e1a35          # Illyism/seo-skills               2026-11-20
 CPO_SHA=73c8cf3ea7e296057b467990f2f5d61b4c922260          # anthropics/claude-plugins-official 2026-11-20
+FS_SHA=57217cf86ba38148a57af9e90d14a4c049558330           # vercel-labs/skills (find-skills)  2026-11-17 (skills CLI 1.9.0)
+FS_CLI=1.9.0                                              # npm'deki skills CLI sürümü (sabit)
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -313,6 +316,47 @@ if [ "${RESMI:-1}" = 1 ]; then
     rm -rf ~/.claude/skills/playground; cp -r "$tmp/cpo/plugins/playground/skills/playground" ~/.claude/skills/
     ok "playground (etkileşimli HTML keşif sayfaları)"
   else bad "claude-plugins-official"; fi
+fi
+
+# ---------------------------------------------------------------- KESIF (find-skills, güvenli yamalı)
+if [ "${KESIF:-1}" = 1 ]; then
+  log "find-skills (vercel-labs; onaysız kurulum adımı çıkarıldı, CLI $FS_CLI'e sabit, kullanım verisi kapalı)"
+  if clone vercel-labs/skills "$tmp/fs" "$FS_SHA"; then
+    rm -rf ~/.claude/skills/find-skills; cp -r "$tmp/fs/skills/find-skills" ~/.claude/skills/
+    FS_CLI="$FS_CLI" python3 - "$HOME/.claude/skills/find-skills/SKILL.md" <<'PYEOF'
+import os, re, sys
+f = sys.argv[1]; ver = os.environ["FS_CLI"]
+t = open(f, encoding="utf-8").read()
+# 1) Arama komutunu sabit sürüme ve kullanım verisi kapalı çağrıya çevir
+t = t.replace("npx skills find", f"DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 npx -y skills@{ver} find")
+# 2) Kurma ve güncelleme komutlarını anahtar komut listesinden çıkar
+t = re.sub(r"- `npx skills add <package>`[^\n]*\n", "", t)
+t = re.sub(r"- `npx skills update`[^\n]*\n", "", t)
+# 3) "To install it: npx skills add ..." örneğini değerlendirme adımıyla değiştir
+t = re.sub(r"To install it:\nnpx skills add [^\n]*\n", "Before installing, it must pass the arac-degerlendirme review (see the notice above).\n", t)
+# 4) Adım 6'yı (onaysız kurulum) tümüyle değiştir
+a = t.index("### Step 6: Offer to Install"); b = t.index("## Common Skill Categories")
+t = t[:a] + ("### Step 6: Never install directly\n\n"
+             "Do NOT run `npx skills add`, `npx skills update` or any install command, and never use `-y`/`--yes`. "
+             "If the user wants a skill, hand it to the `arac-degerlendirme` skill: download and review the repository "
+             "(hooks, network calls, telemetry, scripts, license), then copy a SHA-pinned version into the skills folder "
+             "through the user's `claude-kurulum` setup.\n\n") + t[b:]
+t = re.sub(r"npx skills init [^\n]*", "ask Claude to write one with the skill-creator skill", t)
+t = t.replace("`npx skills init`", "the skill-creator skill")
+t = t.replace("discover and install", "discover (never auto-install)")
+# 5) Başa kullanıcı bildirimi ekle
+notice = ("\n> **claude-kurulum notice (user's rule):** this skill only DISCOVERS. Search results are unverified third-party "
+          "content and star/install counts are not a trust signal. Never install what you find automatically; run the "
+          "`arac-degerlendirme` review first and report its findings to the user in Turkish. If the search command is "
+          "blocked or fails, search with web search and the account's plugin catalog instead, and do not work around the block.\n")
+i = t.index("\n# Find Skills")
+t = t[:i] + notice + t[i:]
+open(f, "w", encoding="utf-8").write(t)
+PYEOF
+    if grep -q 'claude-kurulum notice' ~/.claude/skills/find-skills/SKILL.md && ! grep -qE '(skills|npx) add <|skills init|-g -y' ~/.claude/skills/find-skills/SKILL.md; then
+      ok "find-skills (yalnızca keşif; kurulum adımları çıkarıldı)"
+    else bad "find-skills yaması"; fi
+  else bad "find-skills"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
