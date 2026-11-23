@@ -24,6 +24,7 @@
 #   + SEO         : seo-title-optimization, internal-linking, domain-migration, blog-refresher
 #   + RESMI       : playground (claude-plugins-official'dan); EK_SKILLER'a webapp-testing eklendi
 #   + KESIF       : find-skills (yalnızca arama; onaysız kurulum adımı çıkarıldı)
+#   + DEV         : agent-skills seçkisi (7) + ponytail (6 skill, kancasız)
 # =============================================================================
 set -uo pipefail
 EKLENTILER=${EKLENTILER:-1}; SCRAPLING=${SCRAPLING:-1}; BORSA=${BORSA:-1}
@@ -52,6 +53,8 @@ SEO_SHA=a158c36a1c2c84a44ee7a1ae69c009caf73e1a35          # Illyism/seo-skills  
 CPO_SHA=73c8cf3ea7e296057b467990f2f5d61b4c922260          # anthropics/claude-plugins-official 2026-11-20
 FS_SHA=57217cf86ba38148a57af9e90d14a4c049558330           # vercel-labs/skills (find-skills)  2026-11-17 (skills CLI 1.9.0)
 FS_CLI=1.9.0                                              # npm'deki skills CLI sürümü (sabit)
+AS_SHA=8c99fa36d90068c82d547f7c12a9d67a3e95f4ee           # addyosmani/agent-skills           2026-11-18
+PT_SHA=ebd8654c2c627f721eb8f9c0d1bd4090a29f9e10           # DietrichGebert/ponytail           2026-11-22
 
 cd "$(dirname "$0")"; HERE=$(pwd)
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -357,6 +360,26 @@ PYEOF
       ok "find-skills (yalnızca keşif; kurulum adımları çıkarıldı)"
     else bad "find-skills yaması"; fi
   else bad "find-skills"; fi
+fi
+
+# ---------------------------------------------------------------- DEV (kod yazarken: yayın, güvenlik, sadelik)
+if [ "${DEV:-1}" = 1 ]; then
+  log "Geliştirme skill'leri (kancasız): agent-skills'ten 7, ponytail'den 6"
+  if clone addyosmani/agent-skills "$tmp/as" "$AS_SHA"; then
+    # superpowers (plan, TDD, hata ayıklama, kod incelemesi) ile çakışmayan, yayın ve kalite odaklı seçki
+    AS_SET="shipping-and-launch security-and-hardening ci-cd-and-automation source-driven-development doubt-driven-development interview-me documentation-and-adrs"
+    for s in $AS_SET; do rm -rf ~/.claude/skills/$s; cp -r "$tmp/as/skills/$s" ~/.claude/skills/; done
+    # skill'ler ../../references/ altındaki ortak kontrol listelerine bağlanıyor (= ~/.claude/references)
+    mkdir -p ~/.claude/references && cp "$tmp/as/references/"*.md ~/.claude/references/
+    ok "agent-skills seçkisi ($(echo $AS_SET | wc -w | tr -d ' ') skill + ortak kontrol listeleri)"
+  else bad "agent-skills"; fi
+  if clone DietrichGebert/ponytail "$tmp/pt" "$PT_SHA"; then
+    # Yalnızca skill'ler. Her mesajda çalışan oturum/istem kancaları (hooks/) bilinçli olarak alınmaz.
+    for s in ponytail ponytail-audit ponytail-debt ponytail-gain ponytail-help ponytail-review; do
+      rm -rf ~/.claude/skills/$s; cp -r "$tmp/pt/skills/$s" ~/.claude/skills/
+    done
+    ok "ponytail (6 skill, kancasız)"
+  else bad "ponytail"; fi
 fi
 
 # Bu depodaki kendi skill'lerimiz (ör. arac-degerlendirme)
