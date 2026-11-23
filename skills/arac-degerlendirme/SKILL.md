@@ -1,11 +1,23 @@
 ---
 name: arac-degerlendirme
-description: Bir GitHub deposunu, Claude eklentisini, skill'i, MCP sunucusunu, CLI aracını veya yapay zekâ ajanını KURMADAN ÖNCE değerlendir. Kullanıcı bir github.com bağlantısı ya da araç adı paylaştığında; "bunu kuralım mı", "buna bakalım", "işime yarar mı", "güvenli mi", "tehlikeli mi" dediğinde; ya da akademik yazım veya makale üretim aracı söz konusu olduğunda kullan. Güvenlik, gizlilik, telif ve kullanım koşulları, akademik etik, maliyet, bakım durumu, mevcut araçlarla çakışma ve alan uygunluğunu kontrol eder; kanıta dayalı bir karar ve gerekiyorsa güvenli kurulum yolu önerir.
+description: Kullanıcı "şunu yapan bir skill/eklenti/araç var mı", "bunun için bir skill bul" dediğinde ya da bir ihtiyaç için araç aradığında (keşif); ayrıca bir GitHub deposunu, Claude eklentisini, skill'i, MCP sunucusunu, CLI aracını veya yapay zekâ ajanını KURMADAN ÖNCE değerlendir. Kullanıcı bir github.com bağlantısı ya da araç adı paylaştığında; "bunu kuralım mı", "buna bakalım", "işime yarar mı", "güvenli mi", "tehlikeli mi" dediğinde; ya da akademik yazım veya makale üretim aracı söz konusu olduğunda kullan. Güvenlik, gizlilik, telif ve kullanım koşulları, akademik etik, maliyet, bakım durumu, mevcut araçlarla çakışma ve alan uygunluğunu kontrol eder; kanıta dayalı bir karar ve gerekiyorsa güvenli kurulum yolu önerir.
 ---
 
 # Araç değerlendirme
 
 Amaç: Kullanıcı (malzeme bilimi akademisyeni; TÜBİTAK projeleri, Q1 yayın, ÜAK/YÖK süreçleri, bireysel yatırım) bir aracı kurmadan önce **kanıta dayalı, eleştirel** bir karar alsın. Popülerlik (yıldız sayısı) kalite ya da güven göstergesi değildir; yıldızlar şişirilebilir.
+
+## 0. Keşif: ihtiyaca göre araç/skill bulma
+
+Kullanıcı bir ihtiyaç için skill ya da araç arıyorsa, önce şu sırayla ara ve **hiçbirini kurma**:
+
+1. **Hesabın kataloğu:** `SearchPlugins` (Anthropic dizini, yayıncı katmanı ve içerik taraması bilgisiyle gelir).
+2. **Anthropic resmî kaynakları:** anthropics/skills ve claude-plugins-official.
+3. **Web araması** ve topluluk dizinleri (skills.sh sıralaması, awesome listeleri). Yıldız ve kurulum sayısı **kalite ya da güven göstergesi değildir**; şişirilebilir. Yalnızca "ne kadar yaygın" bilgisi olarak kullan.
+
+Bulunan adaylar için kullanıcıya şunları sun: ne yaptığı, kaynağı ve yayıncısı, son güncelleme, lisans, ücretli hesap gerektirip gerektirmediği. Sonra bu skill'in **Adım 1–4** sürecini uygula.
+
+**Yasak:** `npx skills add`, `npx skills find` ile bulunan sonucu otomatik kurma, `-y`/`--yes` ile onaysız kurma ve "bul ve kur" tek adımlı kurucular. Bu araçlar incelemeyi atlar. Kullanıcı bir skill'i adıyla isterse bile önce depoyu **indirip incele** (kanca, ağ, telemetri, betikler), sonra sabit SHA ile kopyala.
 
 ## 1. İncele (kodu asla çalıştırma)
 
